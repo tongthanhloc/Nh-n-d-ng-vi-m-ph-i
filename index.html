@@ -28,7 +28,7 @@
       padding: 40px 30px;
       backdrop-filter: blur(15px);
       box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-      max-width: 450px;
+      max-width: 480px;
       width: 100%;
       text-align: center;
       animation: fadeIn 1s ease-in;
@@ -70,12 +70,16 @@
       display: none;
     }
 
-    img#preview {
-      display: none;
+    img {
       max-width: 100%;
       margin-top: 20px;
       border-radius: 12px;
       box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+      display: none;
+    }
+
+    #previewProcessed {
+      margin-top: 10px;
     }
 
     button {
@@ -106,6 +110,12 @@
     .error {
       color: #ff4d4d;
     }
+
+    .section-title {
+      color: white;
+      font-weight: 600;
+      margin-top: 16px;
+    }
   </style>
 </head>
 <body>
@@ -115,16 +125,25 @@
     <label for="imageInput">📁 Chọn ảnh X-quang</label>
     <input type="file" id="imageInput" accept="image/*" />
 
-    <img id="preview" alt="Ảnh xem trước" />
+    <div id="previewSection">
+      <p class="section-title">🖼️ Ảnh gốc</p>
+      <img id="preview" alt="Ảnh xem trước" />
+    </div>
 
     <button id="predictButton">🧠 Dự đoán</button>
 
     <p id="result"></p>
+
+    <div id="processedSection">
+      <p class="section-title">📐 Ảnh sau xử lý</p>
+      <img id="previewProcessed" alt="Ảnh đã xử lý" />
+    </div>
   </div>
 
   <script>
     const imageInput = document.getElementById('imageInput');
     const preview = document.getElementById('preview');
+    const previewProcessed = document.getElementById('previewProcessed');
     const predictButton = document.getElementById('predictButton');
     const resultPara = document.getElementById('result');
 
@@ -139,6 +158,7 @@
         reader.readAsDataURL(file);
         resultPara.textContent = '';
         resultPara.classList.remove('error');
+        previewProcessed.style.display = 'none';
       }
     });
 
@@ -160,8 +180,13 @@
       .then(response => response.json())
       .then(data => {
         if (data.class_name) {
-          resultPara.textContent = '✅ Kết quả: ' + data.class_name;
+          resultPara.textContent = `✅ Kết quả: ${data.class_name} (${data.confidence}%)`;
           resultPara.classList.remove('error');
+
+          if (data.processed_image) {
+            previewProcessed.src = 'data:image/jpeg;base64,' + data.processed_image;
+            previewProcessed.style.display = 'block';
+          }
         } else {
           resultPara.textContent = '❌ Lỗi: ' + data.error;
           resultPara.classList.add('error');
