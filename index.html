@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Nhận diện Viêm phổi</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap');
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Poppins', sans-serif;
+    }
+
+    body {
+      height: 100vh;
+      background: linear-gradient(135deg, #89f7fe 0%, #66a6ff 100%);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .container {
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 20px;
+      padding: 40px 30px;
+      backdrop-filter: blur(15px);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+      max-width: 450px;
+      width: 100%;
+      text-align: center;
+      animation: fadeIn 1s ease-in;
+    }
+
+    @keyframes fadeIn {
+      from {
+        transform: translateY(-20px);
+        opacity: 0;
+      }
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+
+    h1 {
+      color: #fff;
+      margin-bottom: 20px;
+      font-size: 1.8rem;
+    }
+
+    label[for="imageInput"] {
+      background-color: #ffffff30;
+      color: #fff;
+      padding: 10px 20px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: background 0.3s ease;
+      border: 1px solid #fff;
+    }
+
+    label[for="imageInput"]:hover {
+      background-color: #ffffff50;
+    }
+
+    input[type="file"] {
+      display: none;
+    }
+
+    img#preview {
+      display: none;
+      max-width: 100%;
+      margin-top: 20px;
+      border-radius: 12px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+    }
+
+    button {
+      margin-top: 25px;
+      padding: 10px 22px;
+      background-color: #00c6ff;
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.3s ease, transform 0.2s;
+    }
+
+    button:hover {
+      background-color: #007acc;
+      transform: scale(1.03);
+    }
+
+    p#result {
+      margin-top: 20px;
+      font-size: 1.2rem;
+      font-weight: bold;
+      color: white;
+    }
+
+    .error {
+      color: #ff4d4d;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🔍 Nhận diện Viêm phổi</h1>
+
+    <label for="imageInput">📁 Chọn ảnh X-quang</label>
+    <input type="file" id="imageInput" accept="image/*" />
+
+    <img id="preview" alt="Ảnh xem trước" />
+
+    <button id="predictButton">🧠 Dự đoán</button>
+
+    <p id="result"></p>
+  </div>
+
+  <script>
+    const imageInput = document.getElementById('imageInput');
+    const preview = document.getElementById('preview');
+    const predictButton = document.getElementById('predictButton');
+    const resultPara = document.getElementById('result');
+
+    imageInput.addEventListener('change', function(event) {
+      const file = event.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          preview.src = e.target.result;
+          preview.style.display = 'block';
+        }
+        reader.readAsDataURL(file);
+        resultPara.textContent = '';
+        resultPara.classList.remove('error');
+      }
+    });
+
+    predictButton.addEventListener('click', function() {
+      const file = imageInput.files[0];
+      if (!file) {
+        resultPara.textContent = '⚠️ Vui lòng chọn ảnh!';
+        resultPara.classList.add('error');
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append('image', file);
+
+      fetch('http://127.0.0.1:5000/predict', {
+        method: 'POST',
+        body: formData
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.class_name) {
+          resultPara.textContent = '✅ Kết quả: ' + data.class_name;
+          resultPara.classList.remove('error');
+        } else {
+          resultPara.textContent = '❌ Lỗi: ' + data.error;
+          resultPara.classList.add('error');
+        }
+      })
+      .catch(error => {
+        console.error(error);
+        resultPara.textContent = '❌ Có lỗi khi gửi ảnh.';
+        resultPara.classList.add('error');
+      });
+    });
+  </script>
+</body>
+</html>
